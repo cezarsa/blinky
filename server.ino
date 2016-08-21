@@ -33,7 +33,10 @@ void setColor(byte n, byte c) {
 }
 
 void onRequest() {
-  animExtra = server.arg("extra");
+  String extraStr = server.arg("extra");
+  if (extraStr != "") {
+    animExtra = extraStr;
+  }
   String animStr = server.arg("anim");
   if (animStr != "") {
     currentAnimation = animStr.toInt();
