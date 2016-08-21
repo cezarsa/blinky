@@ -1,125 +1,101 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Colors</title>
-<link rel="stylesheet" type="text/css" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Colors</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
+
 <body>
-<div class="cycler">
-    <a href="#" class="sinRainbow">sinRainbow</a>
-    <a href="#" class="linearGrad">linearGrad</a>
-</div>
-<div class="color-picker"></div>
-<div class="camera"></div>
-<div class="camera-area"></div>
-<script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
-<script src="script.js"></script>
-<script>
-var img = $('<img/>');
-var setColor = function(c) {
-    img[0].src = "/esp/?r=" + c[0] + "&g=" + c[1] + "&b=" + c[2];
-};
-if (window.colorPicker) {
-    colorPicker.setCallback(setColor);
-}
-if (window.camera) {
-    camera.setCallback(setColor);
-}
+    <div class="cycler">
+        <a href="#" class="0"><span>&#x1F308;</span></a>
+        <input type="range" min="0" max="40" value="10">
+    </div>
+    <div class="color-picker"></div>
+    <div class="camera"></div>
+    <div class="camera-area"></div>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+    <script src="camera.js"></script>
+    <script src="colorpicker.js"></script>
+    <script src="cyclers.js"></script>
+    <script>
+        var setColor = function(c) {
+            stopCyclers();
+            $.get("/esp", {
+                r: c[0],
+                g: c[1],
+                b: c[2],
+                anim: -1,
+            });
+        };
+        var setRemoteCycler = function(id, extra) {
+            $.get("/esp", {
+                anim: id,
+                extra: extra,
+            });
+        };
+        var setRemoteExtra = function(extra) {
+            $.get("/esp", {
+                extra: extra,
+            });
+        };
+        if (window.colorPicker) {
+            colorPicker.setCallback(setColor);
+            $.get("/esp", function(rsp) {
+                colorPicker.setColor([rsp.r, rsp.g, rsp.b]);
+                $('.cycler input').val(rsp.extra);
+                toggleCycler(rsp.anim);
+            });
+        }
+        if (window.camera) {
+            camera.setCallback(setColor);
+        }
 
-var sinRainbow = (function() {
-    var pi2 = 2 * Math.PI, pi2by3 = pi2/3;
-    var rFreq = 1, gFreq = 1, bFreq = 1, inc = 0.01, html = $('html')[0], toHandler = null;
-    var ri = 0, bi = 0, gi = 0;
-    var rOffset = 0, gOffset = pi2by3, bOffset = 2*pi2by3;
-    var width = 127, center = 128;
-    var cycler = function() {
-        var r = Math.sin(rFreq*ri + rOffset) * width + center;
-        var g = Math.sin(gFreq*gi + gOffset) * width + center;
-        var b = Math.sin(bFreq*bi + bOffset) * width + center;
-        ri += inc;
-        gi += inc;
-        bi += inc;
-        var rDiff = (rFreq*ri + rOffset) - pi2;
-        if (rDiff >= 0) {
-            ri = -(rDiff + rOffset) / rFreq;
-        }
-        var gDiff = (gFreq*gi + gOffset) - pi2;
-        if (gDiff >= 0) {
-            gi = -(gDiff + gOffset) / gFreq;
-        }
-        var bDiff = (bFreq*bi + bOffset) - pi2;
-        if (bDiff >= 0) {
-            bi = -(bDiff + bOffset) / bFreq;
-        }
-        html.style.backgroundColor = 'rgb(' + Math.round(r) + ',' + Math.round(g) + ',' + Math.round(b) + ')';
-        toHandler = setTimeout(cycler, 2);
-    };
-    return {
-        start: function() {
-            if (!toHandler) {
-                cycler();
+        var cyclers = [sinRainbow];
+
+        var stopCyclers = function(except) {
+            $('.cycler').removeClass("active");
+            for (var i = 0; i < cyclers.length; i++) {
+                if (i != except) {
+                    cyclers[i].stop();
+                }
             }
-        },
-        stop: function() {
-            clearTimeout(toHandler);
-            toHandler = null;
-        }
-    };
-}());
+        };
 
-var linearGrad = (function() {
-    var colors = [
-        [255, 0, 0],
-        [0, 255, 0],
-        [255, 0, 0],
-    ], ci = 0, inc = 0.004, transition = 0, func = 'linear';
-    var html = $('html')[0], toHandler = null;
-    var cycler = function() {
-        if (transition == colors.length - 1) {
-            transition = 0;
-        }
-        var color = [],
-            base = colors[transition],
-            dest = colors[transition + 1];
-        for (i = 0; i < 3; ++i) {
-            color[i] = (base[i] * (1 - ci)) + (dest[i] * ci);
-            color[i] = Math.max(0, Math.min(255, Math.round(color[i])));
-        }
-        ci += inc;
-        if (color[0] == dest[0] && color[1] == dest[1] && color[2] == dest[2]) {
-            transition++;
-            ci = 0;
-        }
-        html.style.backgroundColor = 'rgb(' + color[0] + ',' + color[1] + ',' + color[2] + ')';
-        toHandler = setTimeout(cycler, 2);
-    };
-    return {
-        start: function() {
-            if (!toHandler) {
-                cycler();
+        var cycler = null;
+        var toggleCycler = function(cyclerID) {
+            cyclerID = parseInt(cyclerID);
+            stopCyclers(cyclerID);
+            cycler = cyclers[cyclerID];
+            if (!cycler) {
+                return;
             }
-        },
-        stop: function() {
-            clearTimeout(toHandler);
-            toHandler = null;
-        }
-    };
-}());
+            var speed = parseInt($('.cycler input').val());
+            if (cycler && cycler.toggle(speed)) {
+                $('.cycler').addClass("active");
+                $('body').css({
+                    'background-color': 'transparent'
+                });
+                setRemoteCycler(cyclerID, speed);
+            } else {
+                setRemoteCycler(-1);
+            }
+        };
 
-var cyclers = [sinRainbow, linearGrad];
-
-$('.cycler').on('click', 'a', function(ev) {
-    ev.preventDefault();
-    for (var i = 0; i < cyclers.length; ++i) {
-        cyclers[i].stop();
-    }
-    var cycler = window[ev.currentTarget.className];
-    if (cycler) {
-        cycler.start();
-    }
-});
-
-</script>
+        $('.cycler').on('click', 'a', function(ev) {
+            ev.preventDefault();
+            toggleCycler(ev.currentTarget.className);
+        });
+        $('.cycler').on('change', 'input', _.debounce(function(evt) {
+            var speed = parseInt($('.cycler input').val());
+            if (cycler) {
+                cycler.speed(speed);
+            }
+            setRemoteExtra(speed);
+        }, 100));
+    </script>
 </body>
+
 </html>
