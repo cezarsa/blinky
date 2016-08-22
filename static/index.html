@@ -81,6 +81,9 @@
                 setRemoteCycler(cyclerID, speed);
             } else {
                 setRemoteCycler(-1);
+                $.get("/esp", function(rsp) {
+                    colorPicker.setColor([rsp.r, rsp.g, rsp.b]);
+                });
             }
         };
 
