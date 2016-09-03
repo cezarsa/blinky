@@ -10,4 +10,7 @@ clang_complete:
 static:
 	scp -r static/* pi.casa:/var/www/html/blink/
 
-.PHONY: $(.PHONY) static
+serial:
+	screen $(UPLOAD_PORT) 9600
+
+.PHONY: $(.PHONY) static serial clang_complete
