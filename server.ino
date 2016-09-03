@@ -98,9 +98,11 @@ void onConfig() {
 }
 
 void setup() {
+  pinMode(D0, OUTPUT);
   pinMode(D1, OUTPUT);
   pinMode(D2, OUTPUT);
   pinMode(D3, OUTPUT);
+  digitalWrite(D0, HIGH);
   analogWrite(D1, 0);
   analogWrite(D2, 0);
   analogWrite(D3, 0);

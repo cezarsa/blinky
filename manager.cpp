@@ -6,6 +6,7 @@
 String configSSID() { return String("esp-") + ESP.getChipId(); }
 
 bool runManager() {
+  digitalWrite(D0, LOW);
   WiFiManager wifiManager;
   wifiManager.setConfigPortalTimeout(180);
   if (!wifiManager.autoConnect(configSSID().c_str())) {
@@ -14,12 +15,14 @@ bool runManager() {
     ESP.restart();
     return false;
   }
-  Serial.print("Connected with IP:");
-  Serial.print(WiFi.localIP());
+  digitalWrite(D0, HIGH);
+  Serial.print("Connected with IP: ");
+  Serial.println(WiFi.localIP());
   return true;
 }
 
 void forceManager() {
+  digitalWrite(D0, LOW);
   WiFiManager wifiManager;
   wifiManager.setConfigPortalTimeout(180);
   if (!wifiManager.startConfigPortal(configSSID().c_str())) {
