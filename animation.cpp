@@ -2,8 +2,6 @@
 
 #include "common.hpp"
 
-void setColor(byte n, byte c);
-
 namespace sinAnim {
 double pi2 = 2 * PI, pi2by3 = pi2 / 3;
 double rFreq = 1, gFreq = 1, bFreq = 1, inc = 0.01;
@@ -35,8 +33,8 @@ void animate(String extra) {
   if (bDiff >= 0) {
     bi = -(bDiff + bOffset) / bFreq;
   }
-  setColor(0, r);
-  setColor(1, g);
-  setColor(2, b);
+  setColorGamma(color::red, r);
+  setColorGamma(color::green, g);
+  setColorGamma(color::blue, b);
 }
 }

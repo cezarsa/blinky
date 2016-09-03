@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
 
 #include "common.hpp"
 
@@ -10,26 +9,42 @@ ESP8266WebServer server(80);
 const byte nColors = 3;
 char colorLabels[nColors] = {'r', 'g', 'b'};
 byte lastColor[nColors] = {0, 0, 0};
+byte lastColorGamma[nColors] = {0, 0, 0};
+double gammas[nColors] = {1.5, 2.8, 1.8};
+byte max_ins[nColors] = {255, 255, 255};
+byte max_outs[nColors] = {255, 127, 255};
 
 const byte nAnimations = 1;
 animFunc animate[nAnimations] = {sinAnim::animate};
 int currentAnimation = -1;
 String animExtra = "";
 
-void setColor(byte n, byte c) {
-  lastColor[n] = c;
+void setColor(color cIdx, byte c) {
+  lastColor[cIdx] = c;
   byte pin;
-  if (n == 0) {
+  if (cIdx == color::red) {
     pin = D1;
-  } else if (n == 1) {
+  } else if (cIdx == color::green) {
     pin = D2;
-  } else if (n == 2) {
+  } else if (cIdx == color::blue) {
     pin = D3;
   } else {
     return;
   }
   int duty = (1023 * c) / 255;
   analogWrite(pin, duty);
+}
+
+byte fixGamma(color cIdx, byte c) {
+  double gamma = gammas[cIdx];
+  byte max_in = max_ins[cIdx];
+  byte max_out = max_outs[cIdx];
+  return byte(pow(double(c) / double(max_in), gamma) * max_out + 0.5);
+}
+
+void setColorGamma(color cIdx, byte c) {
+  lastColorGamma[cIdx] = c;
+  setColor(cIdx, fixGamma(cIdx, c));
 }
 
 void onRequest() {
@@ -43,21 +58,25 @@ void onRequest() {
   }
   String rStr = server.arg("r");
   if (rStr != "") {
-    setColor(0, rStr.toInt());
+    setColorGamma(color::red, rStr.toInt());
   }
   String gStr = server.arg("g");
   if (gStr != "") {
-    setColor(1, gStr.toInt());
+    setColorGamma(color::green, gStr.toInt());
   }
   String bStr = server.arg("b");
   if (bStr != "") {
-    setColor(2, bStr.toInt());
+    setColorGamma(color::blue, bStr.toInt());
   }
   String rsp("{");
   for (byte i = 0; i < nColors; i++) {
     rsp += "\"";
     rsp += colorLabels[i];
     rsp += "\":";
+    rsp += lastColorGamma[i];
+    rsp += ",\"";
+    rsp += colorLabels[i];
+    rsp += "_raw\":";
     rsp += lastColor[i];
     if (i < nColors - 1) {
       rsp += ",";

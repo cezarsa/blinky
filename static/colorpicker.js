@@ -168,10 +168,11 @@ var colorPicker = (function() {
                 if (curColor[0] == color[0] && curColor[1] == color[1] && curColor[2] == color[2]) {
                     $('.color').eq(i).trigger('click');
                     setSecondLevel(j);
-                    return;
+                    return true;
                 }
             }
         }
+        return false;
     }
 
     return {

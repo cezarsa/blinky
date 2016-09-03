@@ -68,15 +68,15 @@ footer a {
     color: white;
     text-decoration: none;
 }
+
 .camera {
-    width: 30px;
-    height: 30px;
-    background: #333;
     position: absolute;
     right: 10px;
     bottom: 10px;
-    border-radius: 50%;
-    border: 1px solid #fff;
+}
+.camera span {
+    margin-top: 0px;
+    margin-left: -1px;
 }
 .camera-area canvas {
     display: none;
@@ -92,36 +92,84 @@ footer a {
     top: 10vh;
     left: 5vw;
 }
-.cycler {
+
+.config-area {
     position: absolute;
-    top: 10px;
-    right: 10px;
     font-size: 0;
     text-align: right;
 }
-.cycler a {
+.config-area.active {
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 999;
+    padding: 10px;
+    margin: -10px;
+    border-radius: 5px 0 0 5px;
+}
+
+.cycler {
+    top: 10px;
+    right: 10px;
+}
+.cycler a span {
+    font-size: 40px;
+    margin-top: -5px;
+    margin-left: -5px;
+}
+.cycler input {
+    display: none;
+    margin-top: 10px;
+}
+.cycler.active input {
+    display: block;
+    width: 150px;
+}
+
+.manual {
+    top: 50px;
+    right: 10px;
+}
+.manual a span {
+    font-size: 40px;
+    margin-top: -6px;
+    margin-left: -5px;
+}
+.manual input {
+    display: none;
+    margin-bottom: 7px;
+}
+.manual input.r {
+    margin-top: 10px;
+}
+.manual input::-webkit-slider-runnable-track {
+    border-radius: 30px;
+}
+.manual input.r::-webkit-slider-runnable-track {
+    background-color: rgba(255,0,0,0.6);
+}
+.manual input.g::-webkit-slider-runnable-track {
+    background-color: rgba(0,255,0,0.6);
+}
+.manual input.b::-webkit-slider-runnable-track {
+    background-color: rgba(0,0,255,0.6);
+}
+.manual.active input {
+    display: block;
+    width: 150px;
+}
+
+.button {
     text-decoration: none;
     display: inline-block;
     width: 30px;
     height: 30px;
-    overflow: hidden;
+    background: #333;
     border-radius: 50%;
     border: 1px solid #fff;
+    overflow: hidden;
 }
-.cycler a span {
+.button span {
     color: white;
     display: block;
-    font-size: 40px;
+    font-size: 30px;
     line-height: 1.1em;
-    margin-top: -5px;
-    margin-left: -5px;
-}
-
-.cycler input {
-    display: none;
-}
-
-.cycler.active input {
-    display: block;
-    width: 150px;
 }

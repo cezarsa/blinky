@@ -8,12 +8,18 @@
 </head>
 
 <body>
-    <div class="cycler">
-        <a href="#" class="0"><span>&#x1F308;</span></a>
+    <div class="cycler config-area">
+        <a href="#" class="button" data-cycler-id="0"><span>&#x1F308;</span></a>
         <input type="range" min="0" max="40" value="10">
     </div>
+    <div class="manual config-area">
+        <a href="#" class="button"><span>&#x1F4C8;</span></a>
+        <input type="range" class="r" min="0" max="255" value="">
+        <input type="range" class="g" min="0" max="255" value="">
+        <input type="range" class="b" min="0" max="255" value="">
+    </div>
     <div class="color-picker"></div>
-    <div class="camera"></div>
+    <div class="camera button"><span>&#x1F4F7;</span></div>
     <div class="camera-area"></div>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
@@ -29,6 +35,9 @@
                 b: c[2],
                 anim: -1,
             });
+            $('.manual input.r').val(c[0]);
+            $('.manual input.g').val(c[1]);
+            $('.manual input.b').val(c[2]);
         };
         var setRemoteCycler = function(id, extra) {
             $.get("/esp", {
@@ -44,9 +53,14 @@
         if (window.colorPicker) {
             colorPicker.setCallback(setColor);
             $.get("/esp", function(rsp) {
-                colorPicker.setColor([rsp.r, rsp.g, rsp.b]);
+                if (!colorPicker.setColor([rsp.r, rsp.g, rsp.b])) {
+                    $('.manual').addClass('active');
+                }
                 $('.cycler input').val(rsp.extra);
                 toggleCycler(rsp.anim);
+                $('.manual input.r').val(rsp.r);
+                $('.manual input.g').val(rsp.g);
+                $('.manual input.b').val(rsp.b);
             });
         }
         if (window.camera) {
@@ -89,7 +103,7 @@
 
         $('.cycler').on('click', 'a', function(ev) {
             ev.preventDefault();
-            toggleCycler(ev.currentTarget.className);
+            toggleCycler($(ev.currentTarget).data('cycler-id'));
         });
         $('.cycler').on('change', 'input', _.debounce(function(evt) {
             var speed = parseInt($('.cycler input').val());
@@ -97,6 +111,17 @@
                 cycler.speed(speed);
             }
             setRemoteExtra(speed);
+        }, 100));
+
+        $('.manual').on('click', 'a', function(ev){
+            ev.preventDefault();
+            $('.manual').toggleClass('active');
+        });
+        $('.manual').on('input', 'input', _.throttle(function(evt) {
+            var inputColor = parseInt($(evt.currentTarget).val());
+            var color = [$('.manual input.r').val(), $('.manual input.g').val(), $('.manual input.b').val()];
+            colorPicker.setColor(color);
+            setColor(color);
         }, 100));
     </script>
 </body>
