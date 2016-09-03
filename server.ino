@@ -1,10 +1,11 @@
 #include <Arduino.h>
+#include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
 
 #include "common.hpp"
 
-ESP8266WebServer server(80);
+ESP8266WebServer *server;
 
 const byte nColors = 3;
 char colorLabels[nColors] = {'r', 'g', 'b'};
@@ -48,23 +49,23 @@ void setColorGamma(color cIdx, byte c) {
 }
 
 void onRequest() {
-  String extraStr = server.arg("extra");
+  String extraStr = server->arg("extra");
   if (extraStr != "") {
     animExtra = extraStr;
   }
-  String animStr = server.arg("anim");
+  String animStr = server->arg("anim");
   if (animStr != "") {
     currentAnimation = animStr.toInt();
   }
-  String rStr = server.arg("r");
+  String rStr = server->arg("r");
   if (rStr != "") {
     setColorGamma(color::red, rStr.toInt());
   }
-  String gStr = server.arg("g");
+  String gStr = server->arg("g");
   if (gStr != "") {
     setColorGamma(color::green, gStr.toInt());
   }
-  String bStr = server.arg("b");
+  String bStr = server->arg("b");
   if (bStr != "") {
     setColorGamma(color::blue, bStr.toInt());
   }
@@ -85,7 +86,15 @@ void onRequest() {
   rsp += String(",\"anim\":") + currentAnimation;
   rsp += String(",\"extra\":\"") + animExtra + String("\"");
   rsp += "}";
-  server.send(200, "application/json", rsp);
+  server->sendHeader("Access-Control-Allow-Origin", "*");
+  server->send(200, "application/json", rsp);
+}
+
+bool reconfig = false;
+
+void onConfig() {
+  reconfig = true;
+  server->send(200, "text/plain", "config reset");
 }
 
 void setup() {
@@ -97,22 +106,31 @@ void setup() {
   analogWrite(D3, 0);
   delay(1000);
   Serial.begin(9600);
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(SSID_NAME, SSID_PASSWORD);
-  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("WiFi Connect Failed! Rebooting...");
-    delay(1000);
-    ESP.restart();
+
+  if (!runManager()) {
+    return;
   }
 
-  server.on("/", onRequest);
-  server.begin();
-
-  Serial.print(WiFi.localIP());
+  server = new ESP8266WebServer();
+  server->on("/config", onConfig);
+  server->on("/", onRequest);
+  server->begin();
 }
 
 void loop() {
-  server.handleClient();
+  if (server) {
+    server->handleClient();
+  }
+  if (reconfig) {
+    reconfig = false;
+    server->handleClient();
+    delay(2000);
+    WiFi.begin("-", "-");
+    server->stop();
+    delete server;
+    server = NULL;
+    forceManager();
+  }
   if (currentAnimation >= 0 && currentAnimation < nAnimations) {
     animate[currentAnimation](animExtra);
   }
