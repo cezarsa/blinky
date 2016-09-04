@@ -13,3 +13,4 @@ void setColor(color cIdx, byte c);
 void setColorGamma(color cIdx, byte c);
 bool runManager();
 void forceManager();
+void checkFirmware();

@@ -10,7 +10,10 @@ clang_complete:
 static:
 	scp -r static/* pi.casa:/var/www/html/blink/
 
+firmware: all
+	scp $(MAIN_EXE) pi.casa:/var/www/html/blink/firmware/blink.bin
+
 serial:
 	screen $(UPLOAD_PORT) 9600
 
-.PHONY: $(.PHONY) static serial clang_complete
+.PHONY: $(.PHONY) static serial clang_complete firmware
