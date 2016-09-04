@@ -12,9 +12,26 @@ const byte nColors = 3;
 char colorLabels[nColors] = {'r', 'g', 'b'};
 byte lastColor[nColors] = {0, 0, 0};
 byte lastColorGamma[nColors] = {0, 0, 0};
-double gammas[nColors] = {1.5, 2.8, 1.8};
-byte max_ins[nColors] = {255, 255, 255};
+double gammas[nColors] = {1.8, 1.8, 1.8};
 byte max_outs[nColors] = {255, 127, 255};
+
+template <class T> String addAll(T array, String suffix) {
+  String ret;
+  for (int i = 0; i < nColors; ++i) {
+    ret += "\"";
+    ret += colorLabels[i];
+    if (suffix != "") {
+      ret += "_";
+      ret += suffix;
+    }
+    ret += "\":";
+    ret += array[i];
+    if (i < nColors - 1) {
+      ret += ",";
+    }
+  }
+  return ret;
+}
 
 const byte nAnimations = 1;
 animFunc animate[nAnimations] = {sinAnim::animate};
@@ -39,9 +56,8 @@ void setColor(color cIdx, byte c) {
 
 byte fixGamma(color cIdx, byte c) {
   double gamma = gammas[cIdx];
-  byte max_in = max_ins[cIdx];
   byte max_out = max_outs[cIdx];
-  return byte(pow(double(c) / double(max_in), gamma) * max_out + 0.5);
+  return byte(pow(double(c) / 255.0, gamma) * max_out + 0.5);
 }
 
 void setColorGamma(color cIdx, byte c) {
@@ -58,32 +74,30 @@ void onRequest() {
   if (animStr != "") {
     currentAnimation = animStr.toInt();
   }
-  String rStr = server->arg("r");
-  if (rStr != "") {
-    setColorGamma(color::red, rStr.toInt());
-  }
-  String gStr = server->arg("g");
-  if (gStr != "") {
-    setColorGamma(color::green, gStr.toInt());
-  }
-  String bStr = server->arg("b");
-  if (bStr != "") {
-    setColorGamma(color::blue, bStr.toInt());
-  }
-  String rsp("{");
-  for (byte i = 0; i < nColors; i++) {
-    rsp += "\"";
-    rsp += colorLabels[i];
-    rsp += "\":";
-    rsp += lastColorGamma[i];
-    rsp += ",\"";
-    rsp += colorLabels[i];
-    rsp += "_raw\":";
-    rsp += lastColor[i];
-    if (i < nColors - 1) {
-      rsp += ",";
+  for (int i = 0; i < nColors; ++i) {
+    color cIdx = (color)i;
+    String label(colorLabels[i]);
+    String gammaStr = server->arg(label + "_gamma");
+    if (gammaStr != "") {
+      gammas[cIdx] = gammaStr.toFloat();
+    }
+    String maxStr = server->arg(label + "_max");
+    if (maxStr != "") {
+      max_outs[cIdx] = maxStr.toInt();
+    }
+    String colorStr = server->arg(label);
+    if (colorStr != "") {
+      setColorGamma(cIdx, colorStr.toInt());
     }
   }
+  String rsp("{");
+  rsp += addAll(lastColorGamma, "");
+  rsp += ",";
+  rsp += addAll(lastColor, "raw");
+  rsp += ",";
+  rsp += addAll(gammas, "gamma");
+  rsp += ",";
+  rsp += addAll(max_outs, "max");
   rsp += String(",\"anim\":") + currentAnimation;
   rsp += String(",\"extra\":\"") + animExtra + String("\"");
   rsp += "}";
