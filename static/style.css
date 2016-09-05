@@ -29,8 +29,8 @@ body {
 .color {
     -webkit-transition: all .2s;
     transition: all .2s;
-    width: 9vh;
-    height: 9vh;
+    width: 8.33vh;
+    height: 8.33vh;
     margin: 2.5vh;
 }
 .color.active {
