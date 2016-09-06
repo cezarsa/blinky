@@ -173,3 +173,32 @@ footer a {
     font-size: 30px;
     line-height: 1.1em;
 }
+
+.temp-area {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100vh;
+}
+.temp-area > div {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 0;
+    text-align: right;
+}
+.temp-area > div > span {
+    font-size: 16vw;
+    color: rgba(255, 255, 255, 0.5);
+    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.2);
+    text-stroke: 1px rgba(0, 0, 0, 0.2);
+    display: block;
+    font-family: sans-serif;
+}
+
+.temp-area .temp {
+    margin-bottom: 7vw;
+}
+
+.temp-area .humidity {
+}

@@ -1,10 +1,13 @@
 #include <Arduino.h>
 #include <DNSServer.h>
+#include <Dht11.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
 
 #include "common.hpp"
+
+#define DHT11_PIN D4
 
 ESP8266WebServer *server;
 
@@ -31,6 +34,20 @@ template <class T> String addAll(T array, String suffix) {
     }
   }
   return ret;
+}
+
+String checkTemp(Dht11 &dht) {
+  int chk = dht.read();
+  String sensorError;
+  switch (chk) {
+  case Dht11::ReadStatus::ERROR_CHECKSUM:
+    sensorError = "Checksum error";
+    break;
+  case Dht11::ReadStatus::ERROR_TIMEOUT:
+    sensorError = "Time out error";
+    break;
+  }
+  return sensorError;
 }
 
 const byte nAnimations = 1;
@@ -100,6 +117,13 @@ void onRequest() {
   rsp += addAll(max_outs, "max");
   rsp += String(",\"anim\":") + currentAnimation;
   rsp += String(",\"extra\":\"") + animExtra + String("\"");
+  Dht11 dht(DHT11_PIN);
+  auto err = checkTemp(dht);
+  rsp += String(",\"temperature\":") + dht.getTemperature();
+  rsp += String(",\"humidity\":") + dht.getHumidity();
+  if (err != "") {
+    rsp += String(",\"sensor_error\":\"") + err + "\"";
+  }
   rsp += "}";
   server->sendHeader("Access-Control-Allow-Origin", "*");
   server->send(200, "application/json", rsp);
