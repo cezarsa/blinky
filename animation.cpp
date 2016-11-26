@@ -9,7 +9,7 @@ double ri = 0, bi = 0, gi = 0;
 double rOffset = 0, gOffset = pi2by3, bOffset = 2 * pi2by3;
 byte width = 127, center = 128;
 
-void animate(String extra) {
+void animate(String extra, bool gamma) {
   byte totalDelay = 20;
   if (extra.length() > 0) {
     totalDelay = extra.toInt();
@@ -33,8 +33,18 @@ void animate(String extra) {
   if (bDiff >= 0) {
     bi = -(bDiff + bOffset) / bFreq;
   }
-  setColorGamma(color::red, r);
-  setColorGamma(color::green, g);
-  setColorGamma(color::blue, b);
+  if (gamma) {
+    setColorGamma(color::red, r);
+    setColorGamma(color::green, g);
+    setColorGamma(color::blue, b);
+  } else {
+    setColor(color::red, r);
+    setColor(color::green, g);
+    setColor(color::blue, b);
+  }
 }
+
+void animateGamma(String extra) { animate(extra, true); }
+
+void animateRaw(String extra) { animate(extra, false); }
 }

@@ -1,13 +1,10 @@
 #include <Arduino.h>
 #include <DNSServer.h>
-#include <Dht11.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
 
 #include "common.hpp"
-
-#define DHT11_PIN D4
 
 ESP8266WebServer *server;
 
@@ -16,7 +13,8 @@ char colorLabels[nColors] = {'r', 'g', 'b'};
 byte lastColor[nColors] = {0, 0, 0};
 byte lastColorGamma[nColors] = {0, 0, 0};
 double gammas[nColors] = {1.8, 1.8, 1.8};
-byte max_outs[nColors] = {255, 127, 255};
+byte max_outs[nColors] = {255, 160, 160};
+bool globalState = true;
 
 template <class T> String addAll(T array, String suffix) {
   String ret;
@@ -36,22 +34,8 @@ template <class T> String addAll(T array, String suffix) {
   return ret;
 }
 
-String checkTemp(Dht11 &dht) {
-  int chk = dht.read();
-  String sensorError;
-  switch (chk) {
-  case Dht11::ReadStatus::ERROR_CHECKSUM:
-    sensorError = "Checksum error";
-    break;
-  case Dht11::ReadStatus::ERROR_TIMEOUT:
-    sensorError = "Time out error";
-    break;
-  }
-  return sensorError;
-}
-
-const byte nAnimations = 1;
-animFunc animate[nAnimations] = {sinAnim::animate};
+const byte nAnimations = 2;
+animFunc animate[nAnimations] = {sinAnim::animateGamma, sinAnim::animateRaw};
 int currentAnimation = -1;
 String animExtra = "";
 
@@ -82,6 +66,21 @@ void setColorGamma(color cIdx, byte c) {
   setColor(cIdx, fixGamma(cIdx, c));
 }
 
+void toggleLights(bool *force) {
+  if (force) {
+    globalState = *force;
+  } else {
+    globalState = !globalState;
+  }
+  for (int i = 0; i < nColors; ++i) {
+    if (globalState) {
+      setColorGamma((color)i, lastColorGamma[i]);
+    } else {
+      setColor((color)i, 0);
+    }
+  }
+}
+
 void onRequest() {
   String extraStr = server->arg("extra");
   if (extraStr != "") {
@@ -90,6 +89,15 @@ void onRequest() {
   String animStr = server->arg("anim");
   if (animStr != "") {
     currentAnimation = animStr.toInt();
+  }
+  String toggleStr = server->arg("toggle");
+  if (toggleStr != "" && toggleStr.toInt() == 1) {
+    toggleLights(NULL);
+  }
+  String stateStr = server->arg("state");
+  if (stateStr != "") {
+    bool newState = stateStr.toInt() == 1;
+    toggleLights(&newState);
   }
   for (int i = 0; i < nColors; ++i) {
     color cIdx = (color)i;
@@ -104,6 +112,7 @@ void onRequest() {
     }
     String colorStr = server->arg(label);
     if (colorStr != "") {
+      globalState = true;
       setColorGamma(cIdx, colorStr.toInt());
     }
   }
@@ -117,13 +126,8 @@ void onRequest() {
   rsp += addAll(max_outs, "max");
   rsp += String(",\"anim\":") + currentAnimation;
   rsp += String(",\"extra\":\"") + animExtra + String("\"");
-  Dht11 dht(DHT11_PIN);
-  auto err = checkTemp(dht);
-  rsp += String(",\"temperature\":") + dht.getTemperature();
-  rsp += String(",\"humidity\":") + dht.getHumidity();
-  if (err != "") {
-    rsp += String(",\"sensor_error\":\"") + err + "\"";
-  }
+  rsp += String(",\"state\":") + globalState;
+  rsp += String(",") + irJSON();
   rsp += "}";
   server->sendHeader("Access-Control-Allow-Origin", "*");
   server->send(200, "application/json", rsp);
@@ -147,6 +151,7 @@ void setup() {
   analogWrite(D3, 0);
   delay(1000);
   Serial.begin(9600);
+  initIR();
 
   if (!runManager()) {
     return;
@@ -159,6 +164,7 @@ void setup() {
 }
 
 void loop() {
+  loopIR();
   checkFirmware();
   if (server) {
     server->handleClient();

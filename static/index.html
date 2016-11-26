@@ -21,12 +21,6 @@
     <div class="color-picker"></div>
     <div class="camera button"><span>&#x1F4F7;</span></div>
     <div class="camera-area"></div>
-    <div class="temp-area">
-        <div>
-            <span class="temp"><span></span>&deg;C</span>
-            <span class="humidity"><span></span>%</span>
-        </div>
-    </div>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
     <script src="camera.js"></script>
@@ -67,8 +61,6 @@
                 $('.manual input.r').val(rsp.r);
                 $('.manual input.g').val(rsp.g);
                 $('.manual input.b').val(rsp.b);
-                $('.temp span').text(rsp.temperature);
-                $('.humidity span').text(rsp.humidity);
             });
         }
         if (window.camera) {

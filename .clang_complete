@@ -9,6 +9,7 @@
 -D__ets__
 -I/Users/cezarsa/code/esp/blink//
 -I/Users/cezarsa/code/esp/blink//libraries/DHT11/
+-I/Users/cezarsa/code/esp/blink//libraries/IRremoteESP8266/
 -I/Users/cezarsa/code/esp/blink//libraries/WiFiManager/
 -I/Users/cezarsa/code/esp/esp8266//cores/esp8266
 -I/Users/cezarsa/code/esp/esp8266//libraries/DNSServer/src/

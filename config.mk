@@ -1,5 +1,6 @@
 ESP_ROOT = /Users/cezarsa/code/esp/esp8266/
 UPLOAD_PORT = /dev/cu.wchusbserial1410
+#UPLOAD_PORT = /dev/cu.SLAB_USBtoUART
 BOARD = nodemcu
 INCLUDE_VARIANT = nodemcu
 UPLOAD_SPEED = 230400
